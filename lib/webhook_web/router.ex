@@ -7,6 +7,8 @@ defmodule WebhookWeb.Router do
 
   scope "/api", WebhookWeb do
     pipe_through :api
+
+    post "/repos", ScheduledRepoDetailController, :schedule_repo_detail
   end
 
   # Enables LiveDashboard only for development
