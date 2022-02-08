@@ -23,6 +23,8 @@ config :webhook, WebhookWeb.Endpoint,
 # In test we don't send emails.
 config :webhook, Webhook.Mailer, adapter: Swoosh.Adapters.Test
 
+config :webhook, Oban, queues: false, plugins: false
+
 # Print only warnings and errors during test
 config :logger, level: :warn
 

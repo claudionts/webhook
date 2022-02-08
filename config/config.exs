@@ -17,6 +17,11 @@ config :webhook, WebhookWeb.Endpoint,
   pubsub_server: Webhook.PubSub,
   live_view: [signing_salt: "8zBsEiyB"]
 
+config :webhook, Oban,
+  repo: Webhook.Repo,
+  plugins: [Oban.Plugins.Pruner],
+  queues: [default: 10, events: 50, media: 20]
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
