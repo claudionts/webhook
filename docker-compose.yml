@@ -1,65 +1,46 @@
-version: '3'
+version: "3"
 services:
-  zookeeper:
-    image: zookeeper:3.4.9
-    hostname: zookeeper
-    ports:
-      - "2181:2181"
-    environment:
-      ZOO_MY_ID: 1
-      ZOO_PORT: 2181
-      ZOO_SERVERS: server.1=zookeeper:2888:3888
-    volumes:
-      - ./data/zookeeper/data:/data
-      - ./data/zookeeper/datalog:/datalog
-  kafka1:
-    image: confluentinc/cp-kafka:5.3.0
-    hostname: kafka1
-    ports:
-      - "9091:9091"
-    environment:
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19091,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9091
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_BROKER_ID: 1
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    volumes:
-      - ./data/kafka1/data:/var/lib/kafka/data
-    depends_on:
-      - zookeeper
   kafdrop:
     image: obsidiandynamics/kafdrop
     restart: "no"
     ports:
       - "9000:9000"
     environment:
-      KAFKA_BROKERCONNECT: "kafka1:19091"
+      KAFKA_BROKERCONNECT: "kafka:29092"
+      JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
     depends_on:
-      - kafka1
-  db:
+      - "kafka"
+  kafka:
+    image: obsidiandynamics/kafka
+    restart: "no"
+    ports:
+      - "2181:2181"
+      - "9092:9092"
     environment:
-      PGDATA: ./.data/postgresql:/var/lib/postgresql/data
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_HOST_AUTH_METHOD: trust
-    image: 'postgres:11-alpine'
-    restart: always
-    volumes:
-      - ./.data/postgresql:/var/lib/postgresql/data
-      # - 'pgdata:/var/lib/postgresql/data'
-  web:
-    build: .
+      KAFKA_LISTENERS: "INTERNAL://:29092,EXTERNAL://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:29092,EXTERNAL://localhost:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT: "6000"
+      KAFKA_RESTART_ATTEMPTS: "10"
+      KAFKA_RESTART_DELAY: "5"
+      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "0"
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /bin/sh docker_dev_start.sh
+    ports:
+      - "4000:4000"
     depends_on:
       - db
-      - kafka1
+      - kafka
+    links:
+      - db
+  db:
+    image: postgres:latest
     environment:
-      MIX_ENV: dev
-    env_file:
-      - .env
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
     ports:
-      - '4000:4000'
-    volumes:
-      - .:/app
-volumes:
-  pgdata:
+      - "5432:5432"
