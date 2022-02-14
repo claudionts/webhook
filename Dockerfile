@@ -14,7 +14,8 @@ RUN mix local.hex --force && \
 COPY mix.exs mix.exs ./
 COPY config config
 
-RUN mix do deps.get, deps.compile
+RUN mix do deps.get 
+RUN mix deps.compile
 
 COPY priv priv
 COPY lib lib
