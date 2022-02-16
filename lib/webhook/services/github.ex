@@ -1,5 +1,4 @@
 defmodule WebhookWeb.Services.Github do
-
   use Tesla, only: [:get], docs: false
 
   plug Tesla.Middleware.BaseUrl, "https://api.github.com/repos"
@@ -11,24 +10,46 @@ defmodule WebhookWeb.Services.Github do
   ]
 
   def github_req(username, reponame) do
-    [
+    [{_, {:ok, body_issue}}, {_, {:ok, body_contributors}}] = [
       Task.async(fn -> request(username, reponame, "contributors") end),
       Task.async(fn -> request(username, reponame, "issues") end)
-    ] |> IO.inspect()
-    :ok
+    ]
+    |> Task.yield_many()
   end
 
   @spec request(String.t(), String.t(), String.t()) :: {:ok, List.t()} | {:error, String.t()}
   defp request(username, reponame, endpoint) when endpoint in ["contributors", "issues"] do
     get("/#{username}/#{reponame}/#{endpoint}")
-    |> handle_response("issues")
   end
 
-  @spec handle_response(%Tesla.Env{}, String.t()) :: {:ok, %Tesla.Env{}} | {:error, String.t()}
-  defp handle_response(params, process) do
-    case params do
-      {:ok, %Tesla.Env{body: body}} -> body
-      _ -> {:error, "#{process} request not found"}
-    end
+  defp schedule_job(username, reponame, body_issue, body_contributors) do
+    %{
+      "username" => username,
+      "repository" => reponame,
+      "issues" => Enum.map(body_issue, &issues_data(&1)),
+      "contributors" => Enum.map(body_contributors, &contributor_data(&1))
+    }
+    |> Webhook.Job.ScheduleJob.new()
+    |> Oban.insert()
+  end
+
+  @spec issues_data(map) :: map
+  defp issues_data(%{
+         "title" => title,
+         "user" => %{
+           "html_url" => html_url
+         },
+         "labels" => [%{"name" => name}]
+       }) do
+    %{"title" => title, "author" => html_url, "labels" => [name]}
+  end
+
+  @spec contributor_data(map) :: map
+  defp contributor_data(%{
+         "login" => login,
+         "contributions" => contributions,
+         "html_url" => html_url
+       }) do
+    %{"name" => login, "user" => html_url, "qtd_commits" => contributions}
   end
 end
