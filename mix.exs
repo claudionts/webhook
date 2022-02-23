@@ -38,7 +38,9 @@ defmodule Webhook.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:tesla, "~> 1.4"},
-      {:oban, "~> 2.10"}
+      {:oban, "~> 2.10"},
+      {:brod, "~> 3.15"},
+      {:broadway_kafka, "~> 0.3.0"}
     ]
   end
 

@@ -11,6 +11,12 @@ defmodule Webhook.Application do
       {Phoenix.PubSub, name: Webhook.PubSub},
       {Oban, oban_config()},
       WebhookWeb.Endpoint,
+      %{
+        id: :brod_producer,
+        start:
+          {:brod_client, :start_link,
+           [[{"localhost", 9093}], :brod_producer, [auto_start_producers: true]]}
+      }
     ]
 
     opts = [strategy: :one_for_one, name: Webhook.Supervisor]
@@ -23,7 +29,7 @@ defmodule Webhook.Application do
     :ok
   end
 
- defp oban_config do
+  defp oban_config do
     Application.fetch_env!(:webhook, Oban)
   end
 end

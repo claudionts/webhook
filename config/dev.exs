@@ -3,7 +3,7 @@ import Config
 config :webhook, Webhook.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "db",
+  hostname: "localhost",
   database: "postgres",
   show_sensitive_data_on_connection_error: true,
   pool_size: 10

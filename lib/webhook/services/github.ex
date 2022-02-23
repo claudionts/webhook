@@ -22,17 +22,6 @@ defmodule WebhookWeb.Services.Github do
     get("/#{username}/#{reponame}/#{endpoint}")
   end
 
-  defp schedule_job(username, reponame, body_issue, body_contributors) do
-    %{
-      "username" => username,
-      "repository" => reponame,
-      "issues" => Enum.map(body_issue, &issues_data(&1)),
-      "contributors" => Enum.map(body_contributors, &contributor_data(&1))
-    }
-    |> Webhook.Job.ScheduleJob.new()
-    |> Oban.insert()
-  end
-
   @spec issues_data(map) :: map
   defp issues_data(%{
          "title" => title,
