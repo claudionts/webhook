@@ -29,7 +29,7 @@ defmodule Webhook.Services.Github do
   end
 
   @spec request(String.t(), String.t(), String.t()) :: {:ok, List.t()} | {:error, String.t()}
-  defp request(username, reponame, endpoint) when endpoint in ["contributors", "issues"] do
+  def request(username, reponame, endpoint) when endpoint in ["contributors", "issues"] do
     get("/#{username}/#{reponame}/#{endpoint}")
   end
 
