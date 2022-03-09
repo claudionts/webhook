@@ -1,10 +1,16 @@
 defmodule Webhook.GithubProducer do
   def send_message(data) do
-    client_id = :american_orders
-    hosts = [localhost: 9092]
-    :ok = :brod.start_client(hosts, client_id)
-    :ok = :brod.start_producer(client_id, "pedidos", [])
+    :brod.produce_sync_offset(
+      :brod_producer,
+      "github",
+      &random_partitioner/4,
+      :undefined,
+      data
+    )
+  end
 
-    :brod.produce(client_id, "pedidos", :rand.uniform(3) - 1, Integer.to_string(:rand.uniform(3000)), data)
+  defp random_partitioner(_topic, partitions_count, _key, _value) do
+    partition = Enum.random(0..(partitions_count - 1))
+    {:ok, partition}
   end
 end

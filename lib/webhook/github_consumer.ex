@@ -6,39 +6,40 @@ defmodule Webhook.GithubConsumer do
   def start_link(_opts) do
     Broadway.start_link(__MODULE__,
       name: __MODULE__,
+      context: %{},
       producer: [
-        module: { 
+        module: {
           BroadwayKafka.Producer,
           [
-            hosts: "localhost:9092",
-            group_id: "american_orders",
-            topics: ["pedidos"],
-            client_config: []
+            hosts: "localhost:9093",
+            group_id: "brod_producer",
+            topics: ["github"]
           ]
         },
-        concurrency: 10
+        concurrency: 1
       ],
       processors: [
-        default: [
-          concurrency: 2
-        ]
-      ],
-      batchers: [
-        github_requests: [concurrency: 2, batch_size: 10, batch_timeout: 1000]
+        default: [concurrency: 10]
       ]
     )
   end
 
-  def handle_message(_, message, _) do
-    Message.put_batcher(message, :github_requests)
+  @impl Broadway
+  def handle_message(_, %Message{data: data, metadata: meta} = message, _ctx) do
+    Logger.info("Got message from topic #{meta[:topic]}")
+
+    {:ok, decoded} = Jason.decode(data)
+
+    Webhook.ScheduleJob.new(decoded)
+    |> Oban.insert()
+
+    message
   end
 
-  def handle_batch(:github_requests, messages, batch_info, context) do
-    IO.inspect(messages)
-    IO.inspect(batch_info)
-    IO.inspect(context)
+  @impl Broadway
+  def handle_failed(messages, _ctx) do
+    Logger.info("#{Enum.count(messages)} failed messages")
+
     messages
-    |> Webhook.ScheduleJob.new()
-    |> Oban.insert()
   end
 end

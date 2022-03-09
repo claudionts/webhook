@@ -1,16 +1,16 @@
-defmodule WebhookWeb.GithubDetail do
+defmodule WebhookWeb.GithubDetailController do
   use WebhookWeb, :controller
 
-  alias WebhookWeb.Schedule
+  alias Webhook.Github
 
   action_fallback ElixirbankWeb.FallbackController
 
   @spec schedule_repo_detail(%Plug.Conn{}, %{username: String, reponame: String}) :: any()
   def schedule_repo_detail(conn, %{"username" => _, "reponame" => _} = params) do
-    with :ok <- Schedule.repo_detail(params) do
+    with :ok <- Github.repo_detail(params) do
       conn
       |> put_status(:ok)
-      |> put_view(WebhookWeb.ScheduledRepoDetailView)
+      |> put_view(WebhookWeb.GithubDetailView)
       |> render("schedule_repo_detail.json", args: %{"run" => "ok"})
     end
   end

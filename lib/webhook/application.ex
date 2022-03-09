@@ -10,6 +10,7 @@ defmodule Webhook.Application do
       WebhookWeb.Telemetry,
       {Phoenix.PubSub, name: Webhook.PubSub},
       {Oban, oban_config()},
+      {Webhook.GithubConsumer, []},
       WebhookWeb.Endpoint,
       %{
         id: :brod_producer,
