@@ -14,7 +14,7 @@ defmodule Webhook.Services.GithubTest do
                "reponame" => ^reponame,
                "username" => ^username,
                "users" => _
-             } = Github.github_req(username, reponame) |> IO.inspect()
+             } = Github.github_req(username, reponame)
     end
 
     test "return repos and issues empty" do
