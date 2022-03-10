@@ -5,7 +5,7 @@ defmodule Webhook.Services.Github do
   plug Tesla.Middleware.JSON
 
   plug Tesla.Middleware.Headers, [
-    {"Authorization", "Bearer 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"},
+    {"Authorization", "Bearer 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"},
     {"User-Agent", "webhook"}
   ]
 
@@ -29,7 +29,7 @@ defmodule Webhook.Services.Github do
   end
 
   @spec request(String.t(), String.t(), String.t()) :: {:ok, List.t()} | {:error, String.t()}
-  def request(username, reponame, endpoint) when endpoint in ["contributors", "issues"] do
+  defp request(username, reponame, endpoint) when endpoint in ["contributors", "issues"] do
     get("/#{username}/#{reponame}/#{endpoint}")
   end
 
@@ -50,7 +50,7 @@ defmodule Webhook.Services.Github do
 
   @spec issues_data(list) :: list
   defp issues_data({_, _}) do
-    "Issues not exists"
+    []
   end
 
   @spec contributor_data(map) :: map
@@ -64,6 +64,6 @@ defmodule Webhook.Services.Github do
 
   @spec contributor_data(list) :: list
   defp contributor_data({_, _}) do
-    "Contributor not exists"
+    []
   end
 end

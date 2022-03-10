@@ -10,7 +10,14 @@ defmodule Webhook.MixProject do
       compilers: [:gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
@@ -40,7 +47,8 @@ defmodule Webhook.MixProject do
       {:tesla, "~> 1.4"},
       {:oban, "~> 2.10"},
       {:brod, "~> 3.15"},
-      {:broadway_kafka, "~> 0.3.0"}
+      {:broadway_kafka, "~> 0.3.0"},
+      {:excoveralls, "~> 0.10", only: :test}
     ]
   end
 
